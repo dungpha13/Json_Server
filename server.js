@@ -39,7 +39,7 @@ function isAuthenticated({ email, password }) {
     );
 }
 
-server.post("/register", (req, res) => {
+server.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
 
     exist_user = db.users.findIndex((x) => x.email === email);
@@ -57,7 +57,7 @@ server.post("/register", (req, res) => {
         password,
     };
 
-    db.users.push(new_user);
+    await db.users.push(new_user);
     fs.writeFileSync("./db.json", JSON.stringify(db), () => {
         if (err) return console.log(err);
         console.log("writing to " + fileName);
@@ -70,7 +70,7 @@ server.post("/register", (req, res) => {
 });
 
 //login
-server.post("/login", (req, res) => {
+server.post("/login", async (req, res) => {
     // const {email, password} = req.body
     const email = req.body.email;
     const password = req.body.password;
@@ -81,7 +81,7 @@ server.post("/login", (req, res) => {
         res.status(status).json({ status, message });
         return;
     }
-    const access_token = createToken({ email, password });
+    const access_token = await createToken({ email, password });
     res.status(200).json({
         status: 200,
         message: "Success",
@@ -145,6 +145,153 @@ server.get("/auth/users/:email", (req, res) => {
         });
     }
 });
+
+server.delete('/auth/users/:email', async (req, res) => {
+    const email = req.params.email;
+    const exist_email = db.users.findIndex((user) => user.email === email);
+    if (exist_email !== -1) {
+        db.users.splice(exist_email, 1)
+        await fs.writeFileSync("./db.json", JSON.stringify(db), () => {
+            if (err) return console.log(err);
+            console.log("writing to " + fileName);
+        });
+        return res.status(204).json({
+            status: 204,
+            message: "Successfully!"
+        });
+    }
+    return res.status(401).json({
+        status: 401,
+        message: "User doesn't exist!",
+    });
+})
+
+server.get('/auth/orders', (req, res) => {
+    res.status(200).json({
+        status: 200,
+        data: {
+            users: db.orders,
+        },
+    });
+})
+
+server.get('/auth/orders/:orderId', async (req, res) => {
+    const orderId = parseInt(req.params.orderId);
+    const exist_order = await db.orders.findIndex((x) => x.id === orderId)
+    if (exist_order !== -1) {
+        return res.status(200).json({
+            status: 200,
+            data: {
+                users: db.orders[exist_order],
+            },
+        });
+    }
+    return res.status(401).json({
+        status: 401,
+        message: "Order doesn't exist!",
+    });
+})
+
+server.delete('/auth/orders/:orderId', async (req, res) => {
+    const orderId = parseInt(req.params.orderId);
+    const exist_order = await db.orders.findIndex((x) => x.id === orderId)
+    if (exist_order !== -1) {
+        db.orders.splice(exist_order, 1)
+        await fs.writeFileSync("./db.json", JSON.stringify(db), () => {
+            if (err) return console.log(err);
+            console.log("writing to " + fileName);
+        });
+        return res.status(204).json({
+            status: 204,
+            message: "Successfully!"
+        });
+    }
+    return res.status(401).json({
+        status: 401,
+        message: "Order doesn't exist!",
+    });
+})
+
+server.post('/auth/orders', async (req, res) => {
+    const { bookId, customerName } = req.body;
+
+    const exist_book = await db.books.findIndex((x) =>
+        x.id === bookId
+    )
+    if (exist_book === -1) {
+        return res.status(401).json({
+            status: 401,
+            message: "Book doesn't exist!",
+        })
+    } else {
+        const check_book_stock = db.books[exist_book]
+        if (check_book_stock.available === false) {
+            return res.status(401).json({
+                status: 401,
+                message: "Book out of stock!",
+            })
+        } else {
+            const exist_order = await db.orders.findIndex((x) => x.bookId === bookId && x.customerName == customerName);
+            if (exist_order !== -1) {
+                const existingOrder = db.orders[exist_order];
+                existingOrder.quantity += 1;
+                db.orders[exist_order] = existingOrder;
+                res.status(201).json({
+                    status: 201,
+                    message: "Success",
+                    data: existingOrder
+                });
+            } else {
+                const quantity = 1
+                const timestamp = new Date()
+                const new_order = {
+                    id: db.orders.length + 1,
+                    bookId,
+                    customerName,
+                    quantity,
+                    timestamp
+                };
+                db.orders.push(new_order);
+                res.status(201).json({
+                    status: 201,
+                    message: "Success",
+                    data: new_order
+                });
+            }
+        }
+    }
+    await fs.writeFileSync("./db.json", JSON.stringify(db), () => {
+        if (err) return console.log(err);
+        console.log("writing to " + fileName);
+    });
+})
+
+server.patch('/auth/orders/:orderId', async (req, res) => {
+    const orderId = parseInt(req.params.orderId);
+    const { customerName } = req.body
+    const exist_order = await db.orders.findIndex((x) => x.id === orderId);
+    if (exist_order !== -1) {
+        const existingOrder = db.orders[exist_order];
+        existingOrder.customerName = customerName;
+        db.orders[exist_order] = existingOrder;
+
+        await fs.writeFileSync("./db.json", JSON.stringify(db), () => {
+            if (err) return console.log(err);
+            console.log("writing to " + fileName);
+        });
+
+    } else {
+        return res.status(401).json({
+            status: 401,
+            message: "Order doesn't exist!",
+        })
+    }
+
+    res.status(201).json({
+        status: 201,
+        message: "Success",
+    });
+})
 
 //DO SOMETHING
 //END

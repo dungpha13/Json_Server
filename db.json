@@ -47,9 +47,38 @@
         },
         {
             "id": 2,
-            "bookId": 4,
+            "bookId": 3,
+            "customerName": "Elisa Sipes DDS",
+            "quantity": 7,
+            "timestamp": "2023-10-18T18:46:02.751Z"
+        },
+        {
+            "id": 3,
+            "bookId": 3,
+            "customerName": "Charles Schaden",
             "quantity": 1,
-            "timestamp": 1645628437612
+            "timestamp": "2023-10-19T03:39:11.020Z"
+        },
+        {
+            "id": 4,
+            "bookId": 3,
+            "customerName": "Tamara Kuphal",
+            "quantity": 1,
+            "timestamp": "2023-10-19T03:47:19.345Z"
+        },
+        {
+            "id": 5,
+            "bookId": 3,
+            "customerName": "Lewis Shanahan",
+            "quantity": 1,
+            "timestamp": "2023-10-19T03:49:34.100Z"
+        },
+        {
+            "id": 6,
+            "bookId": 3,
+            "customerName": "Floyd Glover IV",
+            "quantity": 1,
+            "timestamp": "2023-10-19T03:50:11.620Z"
         }
     ],
     "users": [
@@ -63,12 +92,6 @@
             "id": 2,
             "username": "dung",
             "email": "dung@gmail.com",
-            "password": "123456"
-        },
-        {
-            "id": 3,
-            "username": "dung1",
-            "email": "dung1@gmail.com",
             "password": "123456"
         }
     ]
